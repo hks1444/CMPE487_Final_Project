@@ -1,3 +1,4 @@
+package legacy;
 import com.sun.management.OperatingSystemMXBean;
 import java.lang.management.ManagementFactory;
 import java.net.*;
