@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  exporter:
+    build: ./exporter
+    container_name: exporter
+    ports:
+      - "8081:8080"
+    networks:
+      - monitoring-net
+    environment:
+      - COLLECTOR_HOST=collector
+      - COLLECTOR_PORT=4000
+      - HTTP_PORT=8080
+      - DEVICE_ID=exporter1
+    # Give access to system metrics
+    privileged: true
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+
+  collector:
+    build: ./collector
+    container_name: collector
+    ports:
+      - "4000:4000/udp"
+      - "8080:8080"
+    networks:
+      - monitoring-net
+
+  dashboard:
+    build: ./dashboard
+    container_name: dashboard
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring-net
+    environment:
+      - COLLECTOR_URL=ws://collector:8080/ws
+    depends_on:
+      - collector
+
+networks:
+  monitoring-net:
+    driver: bridge
