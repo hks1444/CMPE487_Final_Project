@@ -11,8 +11,8 @@ export function meta({}: Route.MetaArgs) {
 
 const ALERT_THRESHOLDS = {
   cpu_usage: 0.8,
-  mem_free: 500_000_000,
-  threads: 200,
+  mem_free: 300_000_000,
+  threads: 250,
 };
 
 export default function Home() {
@@ -90,7 +90,7 @@ export default function Home() {
           Load CPU
         </button>
         <button
-          onClick={() => fetch("http://localhost:8081/load/memory?duration=10")}
+          onClick={() => fetch("http://localhost:8081/load/memory?duration=20")}
           style={{
             padding: "0.5rem 1rem",
             backgroundColor: "#198754",
@@ -128,45 +128,68 @@ export default function Home() {
         >
           Free Resources
         </button>
+        <button
+          onClick={() => {
+            fetch("http://localhost:8082/api/metrics", {
+              method: "DELETE",
+            });
+
+            window.location.reload();
+          }}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#6f42c1",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Clear Data
+        </button>
       </div>
-      {Object.entries(metrics).map(([device, deviceMetrics]) => (
-        <div key={device} style={{ marginBottom: "2rem" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(600px, 1fr))",
-              gap: "1.5rem",
-            }}
-          >
-            {Object.entries(deviceMetrics).map(([metricName, metricData]) => {
-              const isAlert = (() => {
-                const lastValue = metricData[metricData.length - 1]?.value;
-                if (lastValue === undefined) return false;
+      {Object.entries(metrics)
+        .sort(([deviceA], [deviceB]) => deviceA.localeCompare(deviceB)) // Sort devices alphabetically
+        .map(([device, deviceMetrics]) => (
+          <div key={device} style={{ marginBottom: "2rem" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(600px, 1fr))",
+                gap: "1.5rem",
+              }}
+            >
+              {Object.entries(deviceMetrics)
+                .sort(([metricA], [metricB]) => metricA.localeCompare(metricB)) // Sort metrics alphabetically
+                .map(([metricName, metricData]) => {
+                  const isAlert = (() => {
+                    const lastValue = metricData[metricData.length - 1]?.value;
+                    if (lastValue === undefined) return false;
 
-                switch (metricName) {
-                  case "cpu_usage":
-                    return lastValue > ALERT_THRESHOLDS.cpu_usage;
-                  case "mem_free":
-                    return lastValue < ALERT_THRESHOLDS.mem_free;
-                  case "threads":
-                    return lastValue > ALERT_THRESHOLDS.threads;
-                  default:
-                    return false;
-                }
-              })();
+                    switch (metricName) {
+                      case "cpu_usage":
+                        return lastValue > ALERT_THRESHOLDS.cpu_usage;
+                      case "mem_free":
+                        return lastValue < ALERT_THRESHOLDS.mem_free;
+                      case "threads":
+                        return lastValue > ALERT_THRESHOLDS.threads;
+                      default:
+                        return false;
+                    }
+                  })();
 
-              return (
-                <MetricChart
-                  key={metricName}
-                  title={metricName}
-                  data={metricData}
-                  isAlert={isAlert}
-                />
-              );
-            })}
+                  return (
+                    <MetricChart
+                      key={metricName}
+                      title={metricName}
+                      data={metricData}
+                      isAlert={isAlert}
+                    />
+                  );
+                })}
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
 
       {/* Loading/empty state */}
       {Object.keys(metrics).length === 0 && !isLoading && (

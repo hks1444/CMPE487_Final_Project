@@ -19,6 +19,22 @@ public class MetricStore {
         pruneOldData(deviceId, metricName);
     }
     
+    public void clearMetrics(String deviceId) {
+        Map<String, Deque<MetricPoint>> deviceData = store.get(deviceId);
+        if (deviceData != null) {
+            deviceData.clear();
+            System.out.println("Cleared all metrics for device: " + deviceId);
+        }
+    }
+    
+    public void clearAllMetrics() {
+        for (String deviceId : store.keySet()) {
+            clearMetrics(deviceId);
+        }
+        store.clear();
+        System.out.println("Cleared all metrics for all devices");
+    }
+    
     private void pruneOldData(String deviceId, String metricName) {
         Deque<MetricPoint> points = store.get(deviceId).get(metricName);
         long cutoffTime = System.currentTimeMillis() - RETENTION_PERIOD_MS;
