@@ -15,5 +15,6 @@ RUN javac -cp "json-20230618.jar:Java-WebSocket-1.5.4.jar:slf4j-api-2.0.9.jar:sl
 
 EXPOSE 4000/udp
 EXPOSE 8080
+EXPOSE 8081
 
-CMD ["java", "-cp", "/app/src:/app/json-20230618.jar:/app/Java-WebSocket-1.5.4.jar:/app/slf4j-api-2.0.9.jar:/app/slf4j-simple-2.0.9.jar", "collector.Main"]
+CMD ["java", "--add-modules", "jdk.httpserver", "-cp", "/app/src:/app/json-20230618.jar:/app/Java-WebSocket-1.5.4.jar:/app/slf4j-api-2.0.9.jar:/app/slf4j-simple-2.0.9.jar", "collector.Main"]

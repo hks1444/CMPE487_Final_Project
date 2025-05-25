@@ -16,13 +16,17 @@ const ALERT_THRESHOLDS = {
 };
 
 export default function Home() {
-  const { metrics, error } = useMetrics();
+  const { metrics, error, isLoading } = useMetrics();
 
-  if (error) {
+  if (error && Object.keys(metrics).length === 0) {
     return (
       <div style={{ padding: "2rem", color: "red" }}>
-        <h2>Error</h2>
+        <h2>Connection Error</h2>
         <p>{error}</p>
+        <p>
+          Please check that the collector service is running and try refreshing
+          the page.
+        </p>
       </div>
     );
   }
@@ -31,11 +35,45 @@ export default function Home() {
     <main
       style={{ padding: "1.5rem", background: "white", minHeight: "100vh" }}
     >
+      {/* Header with status */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+          flexWrap: "wrap",
+          gap: "1rem",
+        }}
+      >
+        <h1 style={{ margin: 0, color: "#333" }}>System Metrics Dashboard</h1>
+
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          {isLoading && (
+            <span style={{ color: "#666", fontSize: "0.9rem" }}>
+              Loading historical data...
+            </span>
+          )}
+          {error && (
+            <span style={{ color: "#dc3545", fontSize: "0.9rem" }}>
+              ⚠️ {error}
+            </span>
+          )}
+          {!isLoading && !error && Object.keys(metrics).length > 0 && (
+            <span style={{ color: "#28a745", fontSize: "0.9rem" }}>
+              ✅ Connected
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Load test buttons */}
       <div
         style={{
           display: "flex",
           gap: "1rem",
           marginBottom: "1.5rem",
+          flexWrap: "wrap",
         }}
       >
         <button
@@ -98,13 +136,12 @@ export default function Home() {
               display: "grid",
               gridTemplateColumns: "repeat(auto-fit, minmax(600px, 1fr))",
               gap: "1.5rem",
-              marginTop: "1rem",
             }}
           >
             {Object.entries(deviceMetrics).map(([metricName, metricData]) => {
               const isAlert = (() => {
                 const lastValue = metricData[metricData.length - 1]?.value;
-                if (!lastValue) return false;
+                if (lastValue === undefined) return false;
 
                 switch (metricName) {
                   case "cpu_usage":
@@ -131,7 +168,39 @@ export default function Home() {
         </div>
       ))}
 
-      {Object.keys(metrics).length === 0 && <p>Waiting for metrics data...</p>}
+      {/* Loading/empty state */}
+      {Object.keys(metrics).length === 0 && !isLoading && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "3rem",
+            color: "#666",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            border: "2px dashed #dee2e6",
+          }}
+        >
+          <h3>No metrics data available</h3>
+          <p>Waiting for data from devices...</p>
+          <p style={{ fontSize: "0.9rem", marginTop: "1rem" }}>
+            Make sure your metric exporters are running and sending data to the
+            collector.
+          </p>
+        </div>
+      )}
+
+      {isLoading && Object.keys(metrics).length === 0 && (
+        <div
+          style={{
+            textAlign: "center",
+            padding: "3rem",
+            color: "#666",
+          }}
+        >
+          <h3>Loading historical data...</h3>
+          <p>Please wait while we fetch your metrics history.</p>
+        </div>
+      )}
     </main>
   );
 }

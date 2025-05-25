@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   exporter:
@@ -26,6 +26,7 @@ services:
     ports:
       - "4000:4000/udp"
       - "8080:8080"
+      - "8082:8081" # HTTP API port (avoid conflict with exporter)
     networks:
       - monitoring-net
 
@@ -38,6 +39,7 @@ services:
       - monitoring-net
     environment:
       - COLLECTOR_URL=ws://collector:8080/ws
+      - COLLECTOR_API_URL=http://collector:8081 # Add this for HTTP API access
     depends_on:
       - collector
 
